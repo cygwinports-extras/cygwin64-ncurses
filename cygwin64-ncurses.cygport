@@ -1,0 +1,122 @@
+CROSS_HOST="x86_64-pc-cygwin"
+inherit cross
+
+NAME="cygwin64-ncurses"
+VERSION=5.9
+RELEASE=1
+CATEGORY="Devel"
+SUMMARY="ncurses for Cygwin 64bit toolchain"
+DESCRIPTION="The ncurses (new curses) library is a free software emulation of
+curses in System V Release 4.0, and more. It uses terminfo format, supports
+pads and color and multiple highlights and forms characters and function-key
+mapping, and has all the other SYSV-curses enhancements over BSD curses."
+HOMEPAGE="http://invisible-island.net/ncurses/"
+SRC_URI="ftp://invisible-island.net/ncurses/ncurses-${VERSION}.tar.gz"
+SRC_DIR="ncurses-${VERSION}"
+PATCH_URI="
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120616-patch.sh.bz2
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120622.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120630.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120707.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120714.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120721.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120728.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120804.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120811.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120825.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120826.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120901.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120902.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120903.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120908.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120922.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20121006.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20121013.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20121017.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20121026.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20121102.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20121110.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20121117.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20121124.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20121201.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20121208.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20121215.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20121222.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20121229.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20130105.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20130112.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20130119.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20130126.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20130202.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20130209.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20130216.patch.gz
+	5.7-t-suffix.patch
+	5.9-abi-version.patch
+"
+
+src_compile() {
+	cd ${B}
+	mkdir -p build-narrowc
+	pushd build-narrowc
+	cygconf --with-libtool=/usr/bin/${CROSS_HOST}-libtool \
+		--includedir=${CROSS_INCLUDEDIR}/ncurses \
+		--with-pkg-config-libdir=${CROSS_LIBDIR}/pkgconfig \
+		--with-default-terminfo-dir=/usr/share/terminfo \
+		--with-install-prefix=${D} \
+		--without-debug --disable-relink --disable-rpath \
+		--with-ticlib --without-termlib \
+		--enable-ext-mouse --enable-sp-funcs --enable-reentrant \
+		--with-abi-version=10 --with-wrap-prefix=ncwrap_ \
+		--enable-sigwinch --enable-colorfgbg --enable-tcap-names \
+		--disable-termcap --disable-mixed-case --enable-symlinks \
+		--with-pkg-config --enable-pc-files \
+		--with-manpage-format=normal --with-manpage-aliases \
+		--enable-echo
+
+	sed -i -e 's%^\(LIBRARIES[ \t]*=\).*$%\1 ../lib/libncurses.la ../lib/libtic.la%' ncurses/Makefile
+	make
+	popd
+
+	mkdir -p build-widec
+	pushd build-widec
+	cygconf --with-libtool=/usr/bin/${CROSS_HOST}-libtool \
+		--with-build-cflags=-D_XOPEN_SOURCE_EXTENDED \
+		--includedir=${CROSS_INCLUDEDIR}/ncursesw \
+		--with-pkg-config-libdir=${CROSS_LIBDIR}/pkgconfig \
+		--with-default-terminfo-dir=/usr/share/terminfo \
+		--with-install-prefix=${D} \
+		--without-debug --disable-relink --disable-rpath \
+		--with-ticlib --without-termlib --enable-widec --enable-ext-colors \
+		--enable-ext-mouse --enable-sp-funcs --enable-reentrant \
+		--with-abi-version=10 --with-wrap-prefix=ncwrap_ \
+		--enable-sigwinch --enable-colorfgbg --enable-tcap-names \
+		--disable-termcap --disable-mixed-case --enable-symlinks \
+		--with-pkg-config --enable-pc-files \
+		--with-manpage-format=normal --with-manpage-aliases \
+		--enable-echo
+
+	sed -i -e 's%^\(LIBRARIES[ \t]*=\).*$%\1 ../lib/libncursesw.la ../lib/libticw.la%' ncurses/Makefile
+	make
+	popd
+}
+
+src_install() {
+	cd ${B}
+	pushd build-narrowc
+	make install.libs install.includes DESTDIR=${D}
+	popd
+	pushd build-widec
+	make install.libs install.includes DESTDIR=${D}
+	popd
+
+	dosym ncurses/curses.h ${CROSS_INCLUDEDIR}/ncurses.h
+	dosym ncurses/term.h ${CROSS_INCLUDEDIR}/term.h
+
+	pushd ${D}${CROSS_BINDIR}
+	mv ncurses10-config ncurses5-config
+	mv ncursesw10-config ncursesw5-config
+	sed -i -e 's|echo "10"|echo "6"|' ncurses*5-config
+	popd
+}
+
+KEEP_LA_FILES="none"
