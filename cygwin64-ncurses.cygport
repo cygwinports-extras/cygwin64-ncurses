@@ -3,7 +3,7 @@ inherit cross
 
 NAME="cygwin64-ncurses"
 VERSION=5.9
-RELEASE=1
+RELEASE=2
 CATEGORY="Devel"
 SUMMARY="ncurses for Cygwin 64bit toolchain"
 DESCRIPTION="The ncurses (new curses) library is a free software emulation of
@@ -50,12 +50,17 @@ PATCH_URI="
 	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20130202.patch.gz
 	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20130209.patch.gz
 	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20130216.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20130218.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20130302.patch.gz
 	5.7-t-suffix.patch
 	5.9-abi-version.patch
 "
 
 src_compile() {
 	cd ${B}
+
+	if false; then
+
 	mkdir -p build-narrowc
 	pushd build-narrowc
 	cygconf --with-libtool=/usr/bin/${CROSS_HOST}-libtool \
@@ -76,6 +81,8 @@ src_compile() {
 	sed -i -e 's%^\(LIBRARIES[ \t]*=\).*$%\1 ../lib/libncurses.la ../lib/libtic.la%' ncurses/Makefile
 	make
 	popd
+
+	fi # false
 
 	mkdir -p build-widec
 	pushd build-widec
@@ -102,20 +109,26 @@ src_compile() {
 
 src_install() {
 	cd ${B}
+	if false; then
 	pushd build-narrowc
 	make install.libs install.includes DESTDIR=${D}
 	popd
+	fi
 	pushd build-widec
 	make install.libs install.includes DESTDIR=${D}
 	popd
 
-	dosym ncurses/curses.h ${CROSS_INCLUDEDIR}/ncurses.h
-	dosym ncurses/term.h ${CROSS_INCLUDEDIR}/term.h
+	dosym ncursesw/curses.h ${CROSS_INCLUDEDIR}/ncurses.h
+	dosym ncursesw/term.h ${CROSS_INCLUDEDIR}/term.h
+	dosym ncursesw ${CROSS_INCLUDEDIR}/ncurses
+	dosym libncursesw.a ${CROSS_LIBDIR}/libncurses.a
+	dosym libncursesw.dll.a ${CROSS_LIBDIR}/libncurses.dll.a
 
 	pushd ${D}${CROSS_BINDIR}
-	mv ncurses10-config ncurses5-config
+#	mv ncurses10-config ncurses5-config
 	mv ncursesw10-config ncursesw5-config
 	sed -i -e 's|echo "10"|echo "6"|' ncurses*5-config
+	dosym ncursesw5-config ${CROSS_BINDIR}/ncurses5-config
 	popd
 }
 
