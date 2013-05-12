@@ -3,7 +3,7 @@ inherit cross
 
 NAME="cygwin64-ncurses"
 VERSION=5.9
-RELEASE=2
+RELEASE=4
 CATEGORY="Devel"
 SUMMARY="ncurses for Cygwin 64bit toolchain"
 DESCRIPTION="The ncurses (new curses) library is a free software emulation of
@@ -14,44 +14,7 @@ HOMEPAGE="http://invisible-island.net/ncurses/"
 SRC_URI="ftp://invisible-island.net/ncurses/ncurses-${VERSION}.tar.gz"
 SRC_DIR="ncurses-${VERSION}"
 PATCH_URI="
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120616-patch.sh.bz2
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120622.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120630.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120707.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120714.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120721.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120728.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120804.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120811.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120825.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120826.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120901.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120902.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120903.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120908.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20120922.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20121006.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20121013.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20121017.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20121026.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20121102.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20121110.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20121117.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20121124.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20121201.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20121208.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20121215.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20121222.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20121229.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20130105.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20130112.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20130119.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20130126.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20130202.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20130209.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20130216.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20130218.patch.gz
-	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20130302.patch.gz
+	ftp://invisible-island.net/ncurses/${VERSION}/ncurses-${VERSION}-20130504-patch.sh.bz2
 	5.7-t-suffix.patch
 	5.9-abi-version.patch
 "
@@ -88,7 +51,6 @@ src_compile() {
 	pushd build-widec
 	cygconf --with-libtool=/usr/bin/${CROSS_HOST}-libtool \
 		--with-build-cflags=-D_XOPEN_SOURCE_EXTENDED \
-		--includedir=${CROSS_INCLUDEDIR}/ncursesw \
 		--with-pkg-config-libdir=${CROSS_LIBDIR}/pkgconfig \
 		--with-default-terminfo-dir=/usr/share/terminfo \
 		--with-install-prefix=${D} \
@@ -118,11 +80,26 @@ src_install() {
 	make install.libs install.includes DESTDIR=${D}
 	popd
 
-	dosym ncursesw/curses.h ${CROSS_INCLUDEDIR}/ncurses.h
-	dosym ncursesw/term.h ${CROSS_INCLUDEDIR}/term.h
-	dosym ncursesw ${CROSS_INCLUDEDIR}/ncurses
-	dosym libncursesw.a ${CROSS_LIBDIR}/libncurses.a
-	dosym libncursesw.dll.a ${CROSS_LIBDIR}/libncurses.dll.a
+	dodir ${CROSS_INCLUDEDIR}/ncurses{,w}
+	pushd ${D}${CROSS_INCLUDEDIR}/ncurses
+	ln -s ../*.h .
+	popd
+	pushd ${D}${CROSS_INCLUDEDIR}/ncursesw
+	ln -s ../*.h .
+	popd
+
+	pushd ${D}${CROSS_LIBDIR}
+	for l in lib*.a
+	do
+		ln -s ${l} ${l/w/}
+	done
+	dosym libncursesw.a ${CROSS_LIBDIR}/libcurses.a
+	dosym libncursesw.dll.a ${CROSS_LIBDIR}/libcurses.dll.a
+
+	for f in *.pc
+	do
+		ln -s ${f} ${f/w/}
+	done
 
 	pushd ${D}${CROSS_BINDIR}
 #	mv ncurses10-config ncurses5-config
