@@ -3,7 +3,7 @@ inherit cross
 
 NAME="cygwin64-ncurses"
 VERSION=5.9
-RELEASE=4
+RELEASE=5
 CATEGORY="Devel"
 SUMMARY="ncurses for Cygwin 64bit toolchain"
 DESCRIPTION="The ncurses (new curses) library is a free software emulation of
@@ -50,6 +50,7 @@ src_compile() {
 	mkdir -p build-widec
 	pushd build-widec
 	cygconf --with-libtool=/usr/bin/${CROSS_HOST}-libtool \
+		--includedir=${CROSS_INCLUDEDIR} \
 		--with-build-cflags=-D_XOPEN_SOURCE_EXTENDED \
 		--with-pkg-config-libdir=${CROSS_LIBDIR}/pkgconfig \
 		--with-default-terminfo-dir=/usr/share/terminfo \
@@ -95,11 +96,14 @@ src_install() {
 	done
 	dosym libncursesw.a ${CROSS_LIBDIR}/libcurses.a
 	dosym libncursesw.dll.a ${CROSS_LIBDIR}/libcurses.dll.a
+	popd
 
+	pushd ${D}${CROSS_LIBDIR}/pkgconfig
 	for f in *.pc
 	do
 		ln -s ${f} ${f/w/}
 	done
+	popd
 
 	pushd ${D}${CROSS_BINDIR}
 #	mv ncurses10-config ncurses5-config
